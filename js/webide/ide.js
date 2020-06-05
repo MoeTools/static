@@ -1,128 +1,139 @@
-//download.js 3.0
+//download.js v3.0
 function download(data, strFileName, strMimeType) {
 
-	var self = window, // this script is only for browsers anyway...
-		u = "application/octet-stream", // this default mime also triggers iframe downloads
-		m = strMimeType || u,
-		x = data,
-		D = document,
-		a = D.createElement("a"),
-		z = function(a){return String(a);},
+    var self = window, // this script is only for browsers anyway...
+        u = "application/octet-stream", // this default mime also triggers iframe downloads
+        m = strMimeType || u,
+        x = data,
+        D = document,
+        a = D.createElement("a"),
+        z = function(a){return String(a);},
 
-		B = self.Blob || self.MozBlob || self.WebKitBlob || z,
-		BB = self.MSBlobBuilder || self.WebKitBlobBuilder || self.BlobBuilder,
-		fn = strFileName || "download",
-		blob,
-		b,
-		ua,
-		fr;
+        B = self.Blob || self.MozBlob || self.WebKitBlob || z,
+        BB = self.MSBlobBuilder || self.WebKitBlobBuilder || self.BlobBuilder,
+        fn = strFileName || "download",
+        blob,
+        b,
+        ua,
+        fr;
 
-	//if(typeof B.bind === 'function' ){ B=B.bind(self); }
+    //if(typeof B.bind === 'function' ){ B=B.bind(self); }
 
-	if(String(this)==="true"){ //reverse arguments, allowing download.bind(true, "text/xml", "export.xml") to act as a callback
-		x=[x, m];
-		m=x[0];
-		x=x[1];
-	}
+    if(String(this)==="true"){ //reverse arguments, allowing download.bind(true, "text/xml", "export.xml") to act as a callback
+        x=[x, m];
+        m=x[0];
+        x=x[1];
+    }
 
-	//go ahead and download dataURLs right away
-	if(String(x).match(/^data\:[\w+\-]+\/[\w+\-]+[,;]/)){
-		return navigator.msSaveBlob ?  // IE10 can't do a[download], only Blobs:
-			navigator.msSaveBlob(d2b(x), fn) :
-			saver(x) ; // everyone else can save dataURLs un-processed
-	}//end if dataURL passed?
+    //go ahead and download dataURLs right away
+    if(String(x).match(/^data\:[\w+\-]+\/[\w+\-]+[,;]/)){
+        return navigator.msSaveBlob ?  // IE10 can't do a[download], only Blobs:
+            navigator.msSaveBlob(d2b(x), fn) :
+            saver(x) ; // everyone else can save dataURLs un-processed
+    }//end if dataURL passed?
 
-	try{
+    try{
 
-		blob = x instanceof B ?
-			x :
-			new B([x], {type: m}) ;
-	}catch(y){
-		if(BB){
-			b = new BB();
-			b.append([x]);
-			blob = b.getBlob(m); // the blob
-		}
+        blob = x instanceof B ?
+            x :
+            new B([x], {type: m}) ;
+    }catch(y){
+        if(BB){
+            b = new BB();
+            b.append([x]);
+            blob = b.getBlob(m); // the blob
+        }
 
-	}
+    }
 
-	function d2b(u) {
-		var p= u.split(/[:;,]/),
-		t= p[1],
-		dec= p[2] == "base64" ? atob : decodeURIComponent,
-		bin= dec(p.pop()),
-		mx= bin.length,
-		i= 0,
-		uia= new Uint8Array(mx);
+    function d2b(u) {
+        var p= u.split(/[:;,]/),
+        t= p[1],
+        dec= p[2] == "base64" ? atob : decodeURIComponent,
+        bin= dec(p.pop()),
+        mx= bin.length,
+        i= 0,
+        uia= new Uint8Array(mx);
 
-		for(i;i<mx;++i) uia[i]= bin.charCodeAt(i);
+        for(i;i<mx;++i) uia[i]= bin.charCodeAt(i);
 
-		return new B([uia], {type: t});
-	 }
+        return new B([uia], {type: t});
+     }
 
-	function saver(url, winMode){
+    function saver(url, winMode){
 
-		if ('download' in a) { //html5 A[download]
-			a.href = url;
-			a.setAttribute("download", fn);
-			a.innerHTML = "downloading...";
-			D.body.appendChild(a);
-			setTimeout(function() {
-				a.click();
-				D.body.removeChild(a);
-				if(winMode===true){setTimeout(function(){ self.URL.revokeObjectURL(a.href);}, 250 );}
-			}, 66);
-			return true;
-		}
+        if ('download' in a) { //html5 A[download]
+            a.href = url;
+            a.setAttribute("download", fn);
+            a.innerHTML = "downloading...";
+            D.body.appendChild(a);
+            setTimeout(function() {
+                a.click();
+                D.body.removeChild(a);
+                if(winMode===true){setTimeout(function(){ self.URL.revokeObjectURL(a.href);}, 250 );}
+            }, 66);
+            return true;
+        }
 
-		//do iframe dataURL download (old ch+FF):
-		var f = D.createElement("iframe");
-		D.body.appendChild(f);
-		if(!winMode){ // force a mime that will download:
-			url="data:"+url.replace(/^data:([\w\/\-\+]+)/, u);
-		}
+        //do iframe dataURL download (old ch+FF):
+        var f = D.createElement("iframe");
+        D.body.appendChild(f);
+        if(!winMode){ // force a mime that will download:
+            url="data:"+url.replace(/^data:([\w\/\-\+]+)/, u);
+        }
 
-		f.src = url;
-		setTimeout(function(){ D.body.removeChild(f); }, 333);
+        f.src = url;
+        setTimeout(function(){ D.body.removeChild(f); }, 333);
 
-	}//end saver
+    }//end saver
 
-	if (navigator.msSaveBlob) { // IE10+ : (has Blob, but not a[download] or URL)
-		return navigator.msSaveBlob(blob, fn);
-	}
+    if (navigator.msSaveBlob) { // IE10+ : (has Blob, but not a[download] or URL)
+        return navigator.msSaveBlob(blob, fn);
+    }
 
-	if(self.URL){ // simple fast and modern way using Blob and URL:
-		saver(self.URL.createObjectURL(blob), true);
-	}else{
-		// handle non-Blob()+non-URL browsers:
-		if(typeof blob === "string" || blob.constructor===z ){
-			try{
-				return saver( "data:" +  m   + ";base64,"  +  self.btoa(blob)  );
-			}catch(y){
-				return saver( "data:" +  m   + "," + encodeURIComponent(blob)  );
-			}
-		}
+    if(self.URL){ // simple fast and modern way using Blob and URL:
+        saver(self.URL.createObjectURL(blob), true);
+    }else{
+        // handle non-Blob()+non-URL browsers:
+        if(typeof blob === "string" || blob.constructor===z ){
+            try{
+                return saver( "data:" +  m   + ";base64,"  +  self.btoa(blob)  );
+            }catch(y){
+                return saver( "data:" +  m   + "," + encodeURIComponent(blob)  );
+            }
+        }
 
-		// Blob but not URL:
-		fr=new FileReader();
-		fr.onload=function(e){
-			saver(this.result);
-		};
-		fr.readAsDataURL(blob);
-	}
-	return true;
+        // Blob but not URL:
+        fr=new FileReader();
+        fr.onload=function(e){
+            saver(this.result);
+        };
+        fr.readAsDataURL(blob);
+    }
+    return true;
 }
-
 //end download.js
 
-var defaultUrl = localStorageGetItem("api-url") || "https://api.judge0.com";
-var apiUrl = defaultUrl;
+// RapidAPI Configuration (https://rapidapi.com/hermanzdosilovic/api/judge0)
+var useRapidAPI = true;
+var apiAuth = {};
+var defaultUrl = "https://secure.judge0.com/standard";
+if (useRapidAPI) {
+    defaultUrl = "https://judge0.p.rapidapi.com";
+    apiAuth = {
+        "x-rapidapi-host": "judge0.p.rapidapi.com",
+        "x-rapidapi-key": "2956e3f1bcmshcf093b43ee9fdb3p198b18jsn4c7fe87bc3f2" // Your RapidAPI Key
+    };
+}
+
+var apiUrl = localStorageGetItem("api-url") || defaultUrl;
 var wait = localStorageGetItem("wait") || false;
 var pbUrl = "https://pb.judge0.com";
-var check_timeout = 500;
+var check_timeout = 200;
 
 var blinkStatusLine = ((localStorageGetItem("blink") || "true") === "true");
 var editorMode = localStorageGetItem("editorMode") || "normal";
+var redirectStderrToStdout = ((localStorageGetItem("redirectStderrToStdout") || "false") === "true");
 var editorModeObject = null;
 
 var fontSize = 14;
@@ -147,15 +158,19 @@ var $compilerOptions;
 var $commandLineArguments;
 var $insertTemplateBtn;
 var $runBtn;
+var $navigationMessage;
+var $updates;
 var $statusLine;
 
 var timeStart;
 var timeEnd;
 
+var messagesData;
+
 var layoutConfig = {
     settings: {
         showPopoutIcon: false,
-        reorderEnabled: false
+        reorderEnabled: true
     },
     dimensions: {
         borderWidth: 3,
@@ -252,8 +267,42 @@ function localStorageGetItem(key) {
   }
 }
 
-function showApiUrl() {
-    $("#api-url").attr("href", apiUrl);
+function showMessages() {
+    var width = $updates.offset().left - parseFloat($updates.css("padding-left")) -
+                $navigationMessage.parent().offset().left - parseFloat($navigationMessage.parent().css("padding-left")) - 5;
+
+    if (width < 200 || messagesData === undefined) {
+        return;
+    }
+
+    var messages = messagesData["messages"];
+
+    $navigationMessage.css("animation-duration", messagesData["duration"]);
+    $navigationMessage.parent().width(width - 5);
+
+    var combinedMessage = "";
+    for (var i = 0; i < messages.length; ++i) {
+        combinedMessage += `${messages[i]}`;
+        if (i != messages.length - 1) {
+            combinedMessage += "&nbsp".repeat(Math.min(200, messages[i].length));
+        }
+    }
+
+    $navigationMessage.html(combinedMessage);
+}
+
+function loadMessages() {
+    $.ajax({
+        url: `https://minio.judge0.com/public/ide/messages.json?${Date.now()}`,
+        type: "GET",
+        headers: {
+            "Accept": "application/json"
+        },
+        success: function (data, textStatus, jqXHR) {
+            messagesData = data;
+            showMessages();
+        }
+    });
 }
 
 function showError(title, content) {
@@ -328,7 +377,8 @@ function handleResult(data) {
 }
 
 function getIdFromURI() {
-  return location.search.substr(1).trim();
+  var uri = location.search.substr(1).trim();
+  return uri.split("&")[0];
 }
 
 function save() {
@@ -375,12 +425,13 @@ function downloadSource() {
 }
 
 function loadSavedSource() {
-    snipped_id = getIdFromURI();
+    snippet_id = getIdFromURI();
 
-    if (snipped_id.length == 36) {
+    if (snippet_id.length == 36) {
         $.ajax({
-            url: apiUrl + "/submissions/" + snipped_id + "?fields=source_code,language_id,stdin,stdout,stderr,compile_output,message,time,memory,status,compiler_options,command_line_arguments&base64_encoded=true",
+            url: apiUrl + "/submissions/" + snippet_id + "?fields=source_code,language_id,stdin,stdout,stderr,compile_output,message,time,memory,status,compiler_options,command_line_arguments&base64_encoded=true",
             type: "GET",
+            headers: apiAuth,
             success: function(data, textStatus, jqXHR) {
                 sourceEditor.setValue(decode(data["source_code"]));
                 $selectLanguage.dropdown("set selected", data["language_id"]);
@@ -398,9 +449,9 @@ function loadSavedSource() {
             },
             error: handleRunError
         });
-    } else {
+    } else if (snippet_id.length == 4) {
         $.ajax({
-            url: pbUrl + "/" + snipped_id + ".json",
+            url: pbUrl + "/" + snippet_id + ".json",
             type: "GET",
             success: function (data, textStatus, jqXHR) {
                 sourceEditor.setValue(decode(data["source_code"]));
@@ -421,6 +472,8 @@ function loadSavedSource() {
                 loadRandomLanguage();
             }
         });
+    } else {
+        loadRandomLanguage();
     }
 }
 
@@ -457,32 +510,66 @@ function run() {
         language_id: languageId,
         stdin: stdinValue,
         compiler_options: compilerOptions,
-        command_line_arguments: commandLineArguments
+        command_line_arguments: commandLineArguments,
+        redirect_stderr_to_stdout: redirectStderrToStdout
     };
 
-    timeStart = performance.now();
-    $.ajax({
-        url: apiUrl + `/submissions?base64_encoded=true&wait=${wait}`,
-        type: "POST",
-        async: true,
-        contentType: "application/json",
-        data: JSON.stringify(data),
-        success: function (data, textStatus, jqXHR) {
-            console.log(`Your submission token is: ${data.token}`);
-            if (wait == true) {
-                handleResult(data);
-            } else {
-                setTimeout(fetchSubmission.bind(null, data.token), check_timeout);
-            }
-        },
-        error: handleRunError
-    });
+    var sendRequest = function(data) {
+        timeStart = performance.now();
+        $.ajax({
+            url: apiUrl + `/submissions?base64_encoded=true&wait=${wait}`,
+            type: "POST",
+            headers: apiAuth,
+            async: true,
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            xhrFields: {
+                withCredentials: apiUrl.indexOf("/secure") != -1 ? true : false
+            },
+            success: function (data, textStatus, jqXHR) {
+                console.log(`Your submission token is: ${data.token}`);
+                if (wait == true) {
+                    handleResult(data);
+                } else {
+                    setTimeout(fetchSubmission.bind(null, data.token), check_timeout);
+                }
+            },
+            error: handleRunError
+        });
+    }
+
+    var fetchAdditionalFiles = false;
+    if (parseInt(languageId) === 82) {
+        if (sqliteAdditionalFiles === "") {
+            fetchAdditionalFiles = true;
+            $.ajax({
+                url: `https://minio.judge0.com/public/ide/sqliteAdditionalFiles.base64.txt?${Date.now()}`,
+                type: "GET",
+                async: true,
+                contentType: "text/plain",
+                success: function (responseData, textStatus, jqXHR) {
+                    sqliteAdditionalFiles = responseData;
+                    data["additional_files"] = sqliteAdditionalFiles;
+                    sendRequest(data);
+                },
+                error: handleRunError
+            });
+        }
+        else {
+            data["additional_files"] = sqliteAdditionalFiles;
+        }
+    }
+
+    if (!fetchAdditionalFiles) {
+        sendRequest(data);
+    }
 }
 
 function fetchSubmission(submission_token) {
     $.ajax({
         url: apiUrl + "/submissions/" + submission_token + "?base64_encoded=true",
         type: "GET",
+        headers: apiAuth,
         async: true,
         success: function (data, textStatus, jqXHR) {
             if (data.status.id <= 2) { // In Queue or Processing
@@ -500,7 +587,6 @@ function changeEditorLanguage() {
     currentLanguageId = parseInt($selectLanguage.val());
     $(".lm_title")[0].innerText = fileNames[currentLanguageId];
     apiUrl = resolveApiUrl($selectLanguage.val());
-    showApiUrl();
 }
 
 function insertTemplate() {
@@ -515,9 +601,8 @@ function loadRandomLanguage() {
         values.push($selectLanguage[0].options[i].value);
     }
     //$selectLanguage.dropdown("set selected", values[Math.floor(Math.random() * $selectLanguage[0].length)]);
-    $selectLanguage.dropdown("set selected", values[3]);
+    $selectLanguage.dropdown("set selected", values[0]);
     apiUrl = resolveApiUrl($selectLanguage.val());
-    showApiUrl();
     insertTemplate();
 }
 
@@ -574,12 +659,23 @@ function editorsUpdateFontSize(fontSize) {
     sandboxMessageEditor.updateOptions({fontSize: fontSize});
 }
 
+function updateScreenElements() {
+    var display = window.innerWidth <= 1200 ? "none" : "";
+    $(".wide.screen.only").each(function(index) {
+        $(this).css("display", display);
+    });
+}
+
 $(window).resize(function() {
     layout.updateSize();
+    updateScreenElements();
+    showMessages();
 });
 
 $(document).ready(function () {
-    console.log("MoeTools IDE · Powered by Judge0 API");
+    updateScreenElements();
+
+    console.log("Hey, Judge0 IDE is open-sourced: https://github.com/judge0/ide. Have fun!");
 
     $selectLanguage = $("#select-language");
     $selectLanguage.change(function (e) {
@@ -606,10 +702,11 @@ $(document).ready(function () {
         run();
     });
 
+    $navigationMessage = $("#navigation-message span");
+    $updates = $("#updates");
+
     $(`input[name="editor-mode"][value="${editorMode}"]`).prop("checked", true);
     $("input[name=\"editor-mode\"]").on("change", function(e) {
-        $('#site-settings').modal('hide');
-
         editorMode = e.target.value;
         localStorageSetItem("editorMode", editorMode);
 
@@ -617,6 +714,12 @@ $(document).ready(function () {
         changeEditorMode();
 
         sourceEditor.focus();
+    });
+
+    $("input[name=\"redirect-output\"]").prop("checked", redirectStderrToStdout)
+    $("input[name=\"redirect-output\"]").on("change", function(e) {
+        redirectStderrToStdout = e.target.checked;
+        localStorageSetItem("redirectStderrToStdout", redirectStderrToStdout);
     });
 
     $statusLine = $("#status-line");
@@ -635,7 +738,6 @@ $(document).ready(function () {
             if (url != null && url != "") {
                 apiUrl = url;
                 localStorageSetItem("api-url", apiUrl);
-                showApiUrl();
             }
         } else if (keyCode == 118) { // F7
             e.preventDefault();
@@ -644,7 +746,7 @@ $(document).ready(function () {
             alert(`Submission wait is ${wait ? "ON. Enjoy" : "OFF"}.`);
         } else if (event.ctrlKey && keyCode == 83) { // Ctrl+S
             e.preventDefault();
-            save();
+            //save();
         } else if (event.ctrlKey && keyCode == 107) { // Ctrl++
             e.preventDefault();
             fontSize += 1;
@@ -664,7 +766,7 @@ $(document).ready(function () {
         $(this).closest(".message").transition("fade");
     });
 
-    showApiUrl();
+    //loadMessages();
 
     require(["vs/editor/editor.main", "monaco-vim", "monaco-emacs"], function (ignorable, MVim, MEmacs) {
         layout = new GoldenLayout(layoutConfig, $("#site-content"));
@@ -857,6 +959,16 @@ int main() {\n\
 }\n\
 ";
 
+var clojureSource = "(println \"hello, world\")\n";
+
+var cobolSource = "\
+IDENTIFICATION DIVISION.\n\
+PROGRAM-ID. MAIN.\n\
+PROCEDURE DIVISION.\n\
+DISPLAY \"hello, world\".\n\
+STOP RUN.\n\
+";
+
 var lispSource = "(write-line \"hello, world\")";
 
 var dSource = "\
@@ -887,6 +999,8 @@ Content of compiled binary is Base64 encoded and used as source code.\n\
 https://ide.judge0.com/?kS_f\n\
 ";
 
+var fsharpSource = "printfn \"hello, world\"\n";
+
 var fortranSource = "\
 program main\n\
     print *, \"hello, world\"\n\
@@ -903,6 +1017,8 @@ func main() {\n\
 }\n\
 ";
 
+var groovySource = "println \"hello, world\"\n";
+
 var haskellSource = "main = putStrLn \"hello, world\"";
 
 var javaSource = "\
@@ -915,12 +1031,26 @@ public class Main {\n\
 
 var javaScriptSource = "console.log(\"hello, world\");";
 
+var kotlinSource = "\
+fun main() {\n\
+    println(\"hello, world\")\n\
+}\n\
+";
+
 var luaSource = "print(\"hello, world\")";
 
-var nimSource = "\
-# On the Judge0 IDE, Nim is automatically\n\
-# updated every day to the latest stable version.\n\
-echo \"hello, world\"\n\
+var objectiveCSource = "\
+#import <Foundation/Foundation.h>\n\
+\n\
+int main() {\n\
+    @autoreleasepool {\n\
+        char name[10];\n\
+        scanf(\"%s\", name);\n\
+        NSString *message = [NSString stringWithFormat:@\"hello, %s\\n\", name];\n\
+        printf(\"%s\", message.UTF8String);\n\
+    }\n\
+    return 0;\n\
+}\n\
 ";
 
 var ocamlSource = "print_endline \"hello, world\"";
@@ -932,6 +1062,11 @@ program Hello;\n\
 begin\n\
     writeln ('hello, world')\n\
 end.\n\
+";
+
+var perlSource = "\
+my $name = <STDIN>;\n\
+print \"hello, $name\";\n\
 ";
 
 var phpSource = "\
@@ -949,21 +1084,211 @@ main :- write('hello, world\\n').\n\
 
 var pythonSource = "print(\"hello, world\")";
 
+var rSource = "cat(\"hello, world\\n\")";
+
 var rubySource = "puts \"hello, world\"";
 
 var rustSource = "\
 fn main() {\n\
     println!(\"hello, world\");\n\
 }\n\
-"
+";
+
+var scalaSource = "\
+object Main {\n\
+    def main(args: Array[String]) = {\n\
+        val name = scala.io.StdIn.readLine()\n\
+        println(\"hello, \"+ name)\n\
+    }\n\
+}\n\
+";
+
+var sqliteSource = "\
+-- On Judge0 IDE your SQL script is run on chinook database (https://www.sqlitetutorial.net/sqlite-sample-database).\n\
+-- For more information about how to use SQL with Judge0 API please\n\
+-- watch this asciicast: https://asciinema.org/a/326975.\n\
+SELECT\n\
+    Name, COUNT(*) AS num_albums\n\
+FROM artists JOIN albums\n\
+ON albums.ArtistID = artists.ArtistID\n\
+GROUP BY Name\n\
+ORDER BY num_albums DESC\n\
+LIMIT 4;\n\
+";
+var sqliteAdditionalFiles = "";
+
+var swiftSource = "\
+import Foundation\n\
+let name = readLine()\n\
+print(\"hello, \\(name!)\")\n\
+";
 
 var typescriptSource = "console.log(\"hello, world\");";
 
-var vSource = "\
-// On the Judge0 IDE, V is automatically\n\
-// updated every hour to the latest version.\n\
-fn main() {\n\
-    println('hello, world')\n\
+var vbSource = "\
+Public Module Program\n\
+   Public Sub Main()\n\
+      Console.WriteLine(\"hello, world\")\n\
+   End Sub\n\
+End Module\n\
+";
+
+var c3Source = "\
+// On the Judge0 IDE, C3 is automatically\n\
+// updated every hour to the latest commit on master branch.\n\
+module main;\n\
+\n\
+extern func void printf(char *str, ...);\n\
+\n\
+func int main()\n\
+{\n\
+    printf(\"hello, world\\n\");\n\
+    return 0;\n\
+}\n\
+";
+
+var javaTestSource = "\
+import static org.junit.jupiter.api.Assertions.assertEquals;\n\
+\n\
+import org.junit.jupiter.api.Test;\n\
+\n\
+class MainTest {\n\
+    static class Calculator {\n\
+        public int add(int x, int y) {\n\
+            return x + y;\n\
+        }\n\
+    }\n\
+\n\
+    private final Calculator calculator = new Calculator();\n\
+\n\
+    @Test\n\
+    void addition() {\n\
+        assertEquals(2, calculator.add(1, 1));\n\
+    }\n\
+}\n\
+";
+
+var mpiccSource = "\
+// Try adding \"-n 5\" (without quotes) into command line arguments. \n\
+#include <mpi.h>\n\
+\n\
+#include <stdio.h>\n\
+\n\
+int main()\n\
+{\n\
+    MPI_Init(NULL, NULL);\n\
+\n\
+    int world_size;\n\
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);\n\
+\n\
+    int world_rank;\n\
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);\n\
+\n\
+    printf(\"Hello from processor with rank %d out of %d processors.\\n\", world_rank, world_size);\n\
+\n\
+    MPI_Finalize();\n\
+\n\
+    return 0;\n\
+}\n\
+";
+
+var mpicxxSource = "\
+// Try adding \"-n 5\" (without quotes) into command line arguments. \n\
+#include <mpi.h>\n\
+\n\
+#include <iostream>\n\
+\n\
+int main()\n\
+{\n\
+    MPI_Init(NULL, NULL);\n\
+\n\
+    int world_size;\n\
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);\n\
+\n\
+    int world_rank;\n\
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);\n\
+\n\
+    std::cout << \"Hello from processor with rank \"\n\
+              << world_rank << \" out of \" << world_size << \" processors.\\n\";\n\
+\n\
+    MPI_Finalize();\n\
+\n\
+    return 0;\n\
+}\n\
+";
+
+var mpipySource = "\
+# Try adding \"-n 5\" (without quotes) into command line arguments. \n\
+from mpi4py import MPI\n\
+\n\
+comm = MPI.COMM_WORLD\n\
+world_size = comm.Get_size()\n\
+world_rank = comm.Get_rank()\n\
+\n\
+print(f\"Hello from processor with rank {world_rank} out of {world_size} processors\")\n\
+";
+
+var nimSource = "\
+# On the Judge0 IDE, Nim is automatically\n\
+# updated every day to the latest stable version.\n\
+echo \"hello, world\"\n\
+";
+
+var pythonForMlSource = "\
+import mlxtend\n\
+import numpy\n\
+import pandas\n\
+import scipy\n\
+import sklearn\n\
+\n\
+print(\"hello, world\")\n\
+";
+
+var bosqueSource = "\
+// On the Judge0 IDE, Bosque (https://github.com/microsoft/BosqueLanguage)\n\
+// is automatically updated every hour to the latest commit on master branch.\n\
+\n\
+namespace NSMain;\n\
+\n\
+concept WithName {\n\
+    invariant $name != \"\";\n\
+\n\
+    field name: String;\n\
+}\n\
+\n\
+concept Greeting {\n\
+    abstract method sayHello(): String;\n\
+    \n\
+    virtual method sayGoodbye(): String {\n\
+        return \"goodbye\";\n\
+    }\n\
+}\n\
+\n\
+entity GenericGreeting provides Greeting {\n\
+    const instance: GenericGreeting = GenericGreeting@{};\n\
+\n\
+    override method sayHello(): String {\n\
+        return \"hello world\";\n\
+    }\n\
+}\n\
+\n\
+entity NamedGreeting provides WithName, Greeting {\n\
+    override method sayHello(): String {\n\
+        return String::concat(\"hello\", \" \", this.name);\n\
+    }\n\
+}\n\
+\n\
+entrypoint function main(arg?: String): String {\n\
+    var val = arg ?| \"\";\n\
+    if (val == \"1\") {\n\
+        return GenericGreeting@{}.sayHello();\n\
+    }\n\
+    elif (val == \"2\") {\n\
+        return GenericGreeting::instance.sayHello();\n\
+    }\n\
+    else {\n\
+        return NamedGreeting@{name=\"bob\"}.sayHello();\n\
+    }\n\
 }\n\
 ";
 
@@ -989,7 +1314,6 @@ var sources = {
     62: javaSource,
     63: javaScriptSource,
     64: luaSource,
-    1000: nimSource,
     65: ocamlSource,
     66: octaveSource,
     67: pascalSource,
@@ -1001,7 +1325,31 @@ var sources = {
     72: rubySource,
     73: rustSource,
     74: typescriptSource,
-    1001: vSource
+    75: cSource,
+    76: cppSource,
+    77: cobolSource,
+    78: kotlinSource,
+    79: objectiveCSource,
+    80: rSource,
+    81: scalaSource,
+    82: sqliteSource,
+    83: swiftSource,
+    84: vbSource,
+    85: perlSource,
+    86: clojureSource,
+    87: fsharpSource,
+    88: groovySource,
+    1001: cSource,
+    1002: cppSource,
+    1003: c3Source,
+    1004: javaSource,
+    1005: javaTestSource,
+    1006: mpiccSource,
+    1007: mpicxxSource,
+    1008: mpipySource,
+    1009: nimSource,
+    1010: pythonForMlSource,
+    1011: bosqueSource
 };
 
 var fileNames = {
@@ -1026,7 +1374,6 @@ var fileNames = {
     62: "Main.java",
     63: "script.js",
     64: "script.lua",
-    1000: "main.nim",
     65: "main.ml",
     66: "script.m",
     67: "main.pas",
@@ -1038,15 +1385,58 @@ var fileNames = {
     72: "script.rb",
     73: "main.rs",
     74: "script.ts",
-    1001: "main.v"
+    75: "main.c",
+    76: "main.cpp",
+    77: "main.cob",
+    78: "Main.kt",
+    79: "main.m",
+    80: "script.r",
+    81: "Main.scala",
+    82: "script.sql",
+    83: "Main.swift",
+    84: "Main.vb",
+    85: "script.pl",
+    86: "main.clj",
+    87: "script.fsx",
+    88: "script.groovy",
+    1001: "main.c",
+    1002: "main.cpp",
+    1003: "main.c3",
+    1004: "Main.java",
+    1005: "MainTest.java",
+    1006: "main.c",
+    1007: "main.cpp",
+    1008: "script.py",
+    1009: "main.nim",
+    1010: "script.py",
+    1011: "main.bsq"
 };
 
 var languageIdTable = {
-    1000: 1,
-    1001: 1
+    1001: 1,
+    1002: 2,
+    1003: 3,
+    1004: 4,
+    1005: 5,
+    1006: 6,
+    1007: 7,
+    1008: 8,
+    1009: 9,
+    1010: 10,
+    1011: 11
 }
 
+var extraApiUrl = "https://secure.judge0.com/extra";
 var languageApiUrlTable = {
-    1000: "https://nim.api.judge0.com",
-    1001: "https://vlang.api.judge0.com"
+    1001: extraApiUrl,
+    1002: extraApiUrl,
+    1003: extraApiUrl,
+    1004: extraApiUrl,
+    1005: extraApiUrl,
+    1006: extraApiUrl,
+    1007: extraApiUrl,
+    1008: extraApiUrl,
+    1009: extraApiUrl,
+    1010: extraApiUrl,
+    1011: extraApiUrl
 }
