@@ -128,7 +128,7 @@ if (useRapidAPI) {
 
 var apiUrl = localStorageGetItem("api-url") || defaultUrl;
 var wait = localStorageGetItem("wait") || false;
-var pbUrl = "https://pb.judge0.com";
+var pbUrl = "https://pb.judge0.xyz";
 var check_timeout = 200;
 
 var blinkStatusLine = ((localStorageGetItem("blink") || "true") === "true");
@@ -746,7 +746,7 @@ $(document).ready(function () {
             alert(`Submission wait is ${wait ? "ON. Enjoy" : "OFF"}.`);
         } else if (event.ctrlKey && keyCode == 83) { // Ctrl+S
             e.preventDefault();
-            //save();
+            save();
         } else if (event.ctrlKey && keyCode == 107) { // Ctrl++
             e.preventDefault();
             fontSize += 1;
